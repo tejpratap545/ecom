@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { ExtendedRequest } from '../types/extendedRequest';
 import knex from '../database/connection';
 import moment from 'moment';
 import jwt from 'jsonwebtoken';
@@ -7,7 +8,7 @@ function generateOTP(): number {
   return Math.floor(100000 + Math.random() * 900000);
 }
 
-export async function sendOtp(req: Request, res: Response) {
+export async function sendOtp(req: ExtendedRequest, res: Response) {
   const { mobile_number } = req.body;
 
   try {
@@ -30,9 +31,9 @@ function generateToken(userId: number): string {
   });
 }
 
- 
 
-export async function verifyOtp(req: Request, res: Response) {
+
+export async function verifyOtp(req: ExtendedRequest, res: Response) {
   const { mobile_number, otp } = req.body;
 
   try {
@@ -73,5 +74,82 @@ export async function verifyOtp(req: Request, res: Response) {
     res.status(200).json({ message: 'OTP verified', data: { token: token, user: user } });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+}
+
+
+export async function getUser(req: ExtendedRequest, res: Response) {
+  const userId = req.userId;
+
+  const user = await knex('users').select('*').where('id', userId).first();
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  res.json(user);
+}
+
+
+
+
+export async function updateUser(req: ExtendedRequest, res: Response) {
+  const userId = req.userId;
+
+
+  const { first_name, email, mobile_number, address } = req.body;
+
+
+
+  try {
+    const updatedUser = await knex('users')
+      .where('id', userId)
+      .update({
+        first_name,
+        email,
+        mobile_number,
+        address,
+        updated_at: new Date(),
+      });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      message: 'User updated successfully', data: {
+        "user": updatedUser
+      }
+    });
+  } catch (error) {
+    res.status(400).json({ error: 'Error updating user' });
+  }
+}
+
+
+
+export async function partialUpdateUser(req: ExtendedRequest, res: Response) {
+  const userId = req.userId;
+  const updates = req.body;
+
+  try {
+    const updatedUser = await knex('users')
+      .where('id', userId)
+      .update({
+        ...updates,
+        updated_at: new Date(),
+      });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      message: 'User updated successfully', data: {
+        "user": updatedUser
+      }
+    });
+  } catch (error) {
+    res.status(400).json({ error: 'Error updating user' });
   }
 }

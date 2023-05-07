@@ -2,11 +2,16 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "typeRoots": ["src/types", "./node_modules/@types"],     
+    "strictNullChecks": false,
   },
-  "include": ["src"]
+  "include": ["src"],
+  "noImplicitAnyForClassMembers": false,
+ 
+  
 }
