@@ -61,7 +61,12 @@ export async function verifyOtp(req: ExtendedRequest, res: Response) {
       user = existingUser;
     } else {
       const [newUserId] = await knex('users')
-        .insert({ mobile_number })
+        .insert({
+          mobile_number,
+          isAdmin: false,
+          isActive: true,
+        },
+        )
         .returning('id');
 
       [user] = await knex('users').select('*').where('id', newUserId);
