@@ -27,7 +27,7 @@ export async function sendOtp(req: ExtendedRequest, res: Response) {
 
 function generateToken(userId: number): string {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'secret_key', {
-    expiresIn: '1h',
+    expiresIn:  '10d'
   });
 }
 
@@ -78,6 +78,7 @@ export async function verifyOtp(req: ExtendedRequest, res: Response) {
 
     res.status(200).json({ message: 'OTP verified', data: { token: token, user: user } });
   } catch (err) {
+    console.log(err)
     res.status(500).json({ error: 'Server error' });
   }
 }

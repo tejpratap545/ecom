@@ -1,5 +1,5 @@
 import {   Response, NextFunction } from 'express';
-import knex from 'knex';
+import knex from '../database/connection';
 import { ExtendedRequest } from '../types/extendedRequest';
 
 export function authorization(req: ExtendedRequest, res: Response, next: NextFunction) {
@@ -21,7 +21,7 @@ export async function  adminAuthorization(req: ExtendedRequest, res: Response, n
   }
 
   const user = await knex('users')
-    .select('is_admin')
+    .select('isAdmin')
     .where('id', userId)
     .first();
 
@@ -29,10 +29,10 @@ export async function  adminAuthorization(req: ExtendedRequest, res: Response, n
     return res.status(404).json({ error: 'User not found' });
   }
 
-  if (!user.is_admin) {
+  if (!user.isAdmin) {
     return res.status(403).json({ error: 'Access denied. You are not an admin.' });
   }
-  
+
   next();
 }
 
