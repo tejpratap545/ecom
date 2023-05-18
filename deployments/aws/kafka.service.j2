@@ -1,0 +1,14 @@
+[Unit]
+Description=Apache Kafka server
+Documentation=http://kafka.apache.org/documentation.html
+Requires=network.target remote-fs.target
+After=network.target remote-fs.target
+
+[Service]
+Type=simple
+User=kafka
+ExecStart={{ kafka_home }}/bin/kafka-server-start.sh {{ kafka_home }}/config/server.properties
+ExecStop={{ kafka_home }}/bin/kafka-server-stop.sh
+
+[Install]
+WantedBy=multi-user.target

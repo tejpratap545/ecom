@@ -1,0 +1,5 @@
+broker.id={{ ansible_hostname | hash('md5') | int(0, 16) % 1000 }}
+listeners=PLAINTEXT://:9092
+log.dirs=/tmp/kafka-logs
+num.partitions=1
+zookeeper.connect={{ groups['kafka'] | join(',') }}
