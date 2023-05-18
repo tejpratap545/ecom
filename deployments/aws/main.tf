@@ -3,12 +3,17 @@ provider "aws" {
 }
 
 variable "aws_ami" {
-  default = "ami-0dba2cb6798deb6d8"
+  default = "ami-007855ac798b5175e"
 }
 
 variable "key_name" {
   default = "aws-dev-001"
 }
+
+variable "private_key_path" {
+  default = "/Users/tejprtap/Downloads/aws-dev-001.pem"
+}
+
 
 data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_name
@@ -32,7 +37,7 @@ module "eks-kubeconfig" {
   source  = "hyperbadger/eks-kubeconfig/aws"
   version = "2.0.0"
 
-  depends_on = [module.eks]
+  depends_on   = [module.eks]
   cluster_name = module.eks.cluster_name
 }
 
@@ -235,3 +240,91 @@ module "eks" {
 }
 
 
+
+
+resource "aws_instance" "pritunl" {
+  ami           = var.aws_ami
+  instance_type = "t2.micro"
+  key_name      = var.key_name
+  subnet_id     = tolist(module.vpc.public_subnets)[1]
+
+  tags = {
+    Name = "pritunl ec2"
+  }
+
+  provisioner "file" {
+    source      = "pritunl_setup.sh"
+    destination = "/tmp/pritunl_setup.sh"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/pritunl_setup.sh",
+      "/tmp/pritunl_setup.sh",
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+
+
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo systemctl start pritunl mongodb
+              sudo systemctl enable pritunl mongodb
+              EOF
+
+  vpc_security_group_ids = [aws_security_group.pritunl_sg.id]
+}
+
+resource "aws_security_group" "pritunl_sg" {
+  name        = "pritunl_sg"
+  description = "Allow incoming connections to Pritunl"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Pritunl"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 1194
+    to_port     = 1194
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+output "pritunl_public_ip" {
+  value = aws_instance.pritunl.public_ip
+}
