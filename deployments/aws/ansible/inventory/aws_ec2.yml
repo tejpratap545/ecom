@@ -1,0 +1,13 @@
+plugin: aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Name: 
+    - kafka-*
+keyed_groups:
+  - key: tags.Name
+    prefix: ""
+    separator: ""
+compose:
+  ansible_host: private_ip_address
+  ansible_ssh_common_args: '-o ProxyCommand="ssh -q -W %h:%p -i /Users/tejprtap/Downloads/aws-dev-001.pem ubuntu@18.208.209.92"'

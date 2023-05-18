@@ -1,0 +1,4 @@
+[kafka]
+10.0.2.185 ansible_user=ubuntu ansible_ssh_common_args='-o ProxyCommand="ssh -q -W %h:%p -i /Users/tejprtap/Downloads/aws-dev-001.pem ubuntu@18.208.209.92"'
+10.0.2.63  ansible_user=ubuntu ansible_ssh_common_args='-o ProxyCommand="ssh -q -W %h:%p -i /Users/tejprtap/Downloads/aws-dev-001.pem ubuntu@18.208.209.92"'
+10.0.2.165 ansible_user=ubuntu ansible_ssh_common_args='-o ProxyCommand="ssh -q -W %h:%p -i /Users/tejprtap/Downloads/aws-dev-001.pem ubuntu@18.208.209.92"'

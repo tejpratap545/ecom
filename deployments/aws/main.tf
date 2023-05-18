@@ -72,7 +72,7 @@ resource "aws_security_group" "bastion_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-    egress {
+  egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -81,7 +81,9 @@ resource "aws_security_group" "bastion_sg" {
 }
 
 
-
+resource "aws_eip" "bation_ip" {
+  vpc = true
+}
 
 resource "aws_instance" "bastion" {
   ami                    = var.aws_ami
@@ -89,7 +91,7 @@ resource "aws_instance" "bastion" {
   subnet_id              = tolist(module.vpc.public_subnets)[0]
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
-
+   associate_public_ip_address = aws_eip.bation_ip.address
   user_data = <<-EOF
               #!/bin/bash
               sudo apt-get update
@@ -104,6 +106,9 @@ resource "aws_instance" "bastion" {
   }
 }
 
+output "bation_public_ip" {
+  value = aws_eip.bation_ip.public_ip
+}
 
 resource "aws_security_group" "kafka_sg" {
   name   = "kafka_sg"
@@ -123,7 +128,7 @@ resource "aws_security_group" "kafka_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-    egress {
+  egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -137,7 +142,7 @@ resource "aws_instance" "kafka" {
   instance_type          = "t2.micro"
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.kafka_sg.id]
-  subnet_id              = tolist(module.vpc.public_subnets)[1]
+  subnet_id              = tolist(module.vpc.private_subnets)[1]
 
   tags = {
     Name = "kafka-${count.index}"
@@ -148,7 +153,11 @@ resource "aws_instance" "kafka" {
               sudo apt-get update
               sudo ap-get upgrade -y
               EOF
- 
+
+
+  provisioner "local-exec" {
+    command = "ansible-playbook -T 300 ansible/playbooks/setup-kafka.yml"
+  }
 }
 
 output "aws_instance_kafka_0" {
