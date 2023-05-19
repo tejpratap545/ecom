@@ -7,7 +7,7 @@ dotenv.config();
 
 const app: Express = express();
 app.use(express.json());
-const port = process.env.PORT;
+const port = process.env.PORT || 8001;
 app.use(router)
 app.get('/ping', (req: Request, res: Response) => {
   res.send('pong');
