@@ -2,6 +2,13 @@ provider "aws" {
   region = "us-east-1"
 }
 
+provider "helm" {
+  kubernetes {
+    config_path = "~/.kube/config"
+  }
+}
+
+
 variable "aws_ami" {
   default = "ami-007855ac798b5175e"
 }
@@ -28,9 +35,7 @@ data "aws_eks_cluster" "cluster" {
 }
 
 provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
+  config_path = "~/.kube/config"
 }
 
 module "eks-kubeconfig" {
@@ -191,7 +196,8 @@ resource "aws_instance" "kafka" {
   subnet_id              = tolist(module.vpc.private_subnets)[1]
 
   tags = {
-    Name = "kafka-${count.index}"
+    Name    = "kafka-${count.index}"
+    Service = "kafka-cluster"
   }
 
   user_data = <<-EOF
@@ -234,11 +240,47 @@ module "eks" {
       max_capacity     = 10
       min_capacity     = 1
 
-      instance_type = "t2.micro"
+      instance_type                 = "t2.micro"
       additional_security_group_ids = [aws_security_group.worker_nodes.id]
     }
   }
+
+  cluster_endpoint_public_access       = true
+  cluster_endpoint_private_access      = true
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+
+  cluster_security_group_id = aws_security_group.eks_security_group.id
+
+  cluster_enabled_log_types              = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  cloudwatch_log_group_retention_in_days = 7
 }
+
+resource "aws_security_group" "eks_security_group" {
+  name        = "eks_security_group"
+  description = "Security group for EKS Cluster"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all traffic"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all traffic"
+  }
+
+  tags = {
+    Name = "EKS Cluster SG"
+  }
+}
+
 
 
 resource "aws_security_group" "worker_nodes" {
@@ -348,4 +390,20 @@ resource "aws_security_group" "pritunl_sg" {
 
 output "pritunl_public_ip" {
   value = aws_instance.pritunl.public_ip
+}
+
+
+
+
+resource "helm_release" "argocd" {
+  name       = "argocd"
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argo-cd"
+  version    = "3.2.0"
+  namespace  = "argocd"
+
+  set {
+    name  = "server.service.type"
+    value = "LoadBalancer"
+  }
 }

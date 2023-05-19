@@ -1,5 +1,5 @@
 ---
-- hosts: kafka_*
+- hosts: _kafka_cluster
   become: yes
   vars:
     kafka_version: 3.4.0 
