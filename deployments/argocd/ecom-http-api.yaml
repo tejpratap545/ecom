@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ecom http api using argo cd 
+  name: ecom-api
   namespace: argocd
 spec:
   project: default
@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: git@github.com:tejpratap545/ecom.git
     targetRevision: HEAD
-    path: helm/ecom-api
+    path: deployments/helm/ecom-api
   destination:
     server: https://kubernetes.default.svc
     namespace: ecom-api
