@@ -28,7 +28,7 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: latest
       run: |
-        docker build -t $ECR_REGISTRY/ecom-api:$IMAGE_TAG  -f deployments/docker/ecom-api.dockerfile
+        docker build -t $ECR_REGISTRY/ecom-api:$IMAGE_TAG  -f deployments/docker/ecom-api.dockerfile .
         docker push $ECR_REGISTRY/ecom-api:$IMAGE_TAG 
 
    
