@@ -9,7 +9,14 @@ spec:
   source:
     repoURL: git@github.com:tejpratap545/ecom.git
     targetRevision: HEAD
-    path: deployments/helm/ecom-api
+    helm:
+      valueFiles:
+        - values.prod.yaml
+      parameters:
+      - name: image.tag
+        value: vlatest
+    path: my-chart
+    chart: my-chart
   destination:
     server: https://kubernetes.default.svc
     namespace: ecom-api

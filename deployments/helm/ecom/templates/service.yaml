@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "ecom.fullname" . }}
   labels:
-{{ include "ecom.labels" . | indent 4 }}
+    {{- include "ecom.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,5 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: {{ include "ecom.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "ecom.selectorLabels" . | nindent 4 }}
